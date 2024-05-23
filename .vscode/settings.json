@@ -1,0 +1,10 @@
+{
+  "files.associations": {
+    "*.ejs": "html",
+    "*.isml": "html",
+    "stdlib.h": "c",
+    "utils.h": "c",
+    "screen.h": "c",
+    "snake.h": "c"
+  }
+}
