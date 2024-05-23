@@ -25,10 +25,7 @@ font_descriptor_t *font;
 
 int main(int argc, char *argv[]) {
     unsigned char *parlcd_mem_base, *mem_base;
-    int i, j;
-    int ptr;
-    unsigned int c;
-    screen = (Screen)malloc(320 * 480 * 2);
+    screen = (Screen)malloc(SCREEN_HEIGHT * SCREEN_WIDTH * 2);
     uint32_t val_line = 3;
 
     printf("[MAIN] Program started\n");
@@ -47,12 +44,11 @@ int main(int argc, char *argv[]) {
     parlcd_hx8357_init(parlcd_mem_base);
 
     parlcd_write_cmd(parlcd_mem_base, 0x2c);
-    ptr = 0;
-    for (i = 0; i < 320; i++) {
-        for (j = 0; j < 480; j++) {
-            c = 0;
-            screen[ptr] = c;
-            parlcd_write_data(parlcd_mem_base, screen[ptr++]);
+    int pixel = 0;
+    for (int i = 0; i < SCREEN_HEIGHT; i++) {
+        for (int j = 0; j < SCREEN_WIDTH; j++) {
+            screen[pixel] = 0;
+            parlcd_write_data(parlcd_mem_base, screen[pixel++]);
         }
     }
     font = &font_winFreeSystem14x16;
@@ -61,8 +57,19 @@ int main(int argc, char *argv[]) {
     draw_menu(screen, font, parlcd_mem_base);
     wait_for_start(mem_base);
 
-    Snake snake1 = create_snake(1, YELLOW, 100, 100);
-    Snake snake2 = create_snake(1, BLUE, 480 - 50, 320 - 50);
+    Snake snake1 = create_snake(1, YELLOW, 0, 0, DOWN);
+    if (!snake1) {
+        fprintf(stderr, "[MAIN][CRITICAL]: Failed to create snake 1\n");
+        return 1;
+    }
+    printf("[MAIN]: Snake 1 created\n");
+    Snake snake2 = create_snake(1, BLUE, SCREEN_WIDTH - TILE_WIDTH,
+                                SCREEN_HEIGHT - TILE_WIDTH, UP);
+    if (!snake2) {
+        fprintf(stderr, "[MAIN][CRITICAL]: Failed to create snake 2\n");
+        return 1;
+    }
+    printf("[MAIN]: Snake 2 created\n");
 
     //       Food_t food;
     // initialize_food(&food, 200, 150, RED);
@@ -77,9 +84,9 @@ int main(int argc, char *argv[]) {
         if ((r & 0x7000000) != 0) {
             break;
         }
-        xx = ((r & 0xff) * 480) / 256;  // blue
-        // yy = (((r>>8)&0xff)*320)/256;//green
-        zz = (((r >> 16) & 0xff) * 160) / 256;  // red
+        xx = ((r & 0xff) * SCREEN_WIDTH) / 256;          // blue
+        yy = (((r >> 8) & 0xff) * SCREEN_HEIGHT) / 256;  // green
+        zz = (((r >> 16) & 0xff) * 160) / 256;           // red
 
         int delta1 = zz - oldzz;
         int delta2 = xx - oldxx;
@@ -96,12 +103,16 @@ int main(int argc, char *argv[]) {
         oldxx = xx;
         oldzz = zz;
 
-        for (ptr = 0; ptr < 320 * 480; ptr++) {
-            screen[ptr] = 0u;
+        for (pixel = 0; pixel < SCREEN_HEIGHT * SCREEN_WIDTH; pixel++) {
+            screen[pixel] = 0u;
         }
+
+        printf("%d;%d;%d\n", xx, yy, zz);
 
         // update_snake_position(&snake1);
         // update_snake_position(&snake2);
+        move_snake(screen, snake1);
+        move_snake(screen, snake2);
 
         render_snake(screen, snake1);
         render_snake(screen, snake2);
@@ -120,19 +131,22 @@ int main(int argc, char *argv[]) {
         // }
 
         parlcd_write_cmd(parlcd_mem_base, 0x2c);
-        for (ptr = 0; ptr < 480 * 320; ptr++) {
-            parlcd_write_data(parlcd_mem_base, screen[ptr]);
+        for (int pixel = 0; pixel < SCREEN_WIDTH * SCREEN_HEIGHT; pixel++) {
+            parlcd_write_data(parlcd_mem_base, screen[pixel]);
         }
 
         clock_nanosleep(CLOCK_MONOTONIC, 0, &loop_delay, NULL);
     }
 
     parlcd_write_cmd(parlcd_mem_base, 0x2c);
-    for (ptr = 0; ptr < 480 * 320; ptr++) {
+    for (int pixel = 0; pixel < SCREEN_WIDTH * SCREEN_HEIGHT; pixel++) {
         parlcd_write_data(parlcd_mem_base, 0);
     }
 
     // led_line(mem_base, val_line);
+
+    free(snake1);
+    free(snake2);
 
     printf("[MAIN] Program finished\n");
 
