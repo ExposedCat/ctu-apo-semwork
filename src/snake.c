@@ -1,6 +1,7 @@
 #include "snake.h"
 
 #include "food.h"
+#include "utils/image.h"
 
 Snake create_snake(Color color, int x, int y, Direction direction) {
     Snake snake = (Snake)malloc(sizeof(Snake_t));
@@ -24,10 +25,20 @@ Snake create_snake(Color color, int x, int y, Direction direction) {
 
 void render_snake(Screen screen, Snake snake) {
     Tile tile = snake->head;
-    do {
+    char asset_name[100];
+    sprintf(asset_name, "/tmp/exposedcat/snake-%s-%s.ppm",
+            snake->color == RED ? "red" : "blue",
+            snake->direction == UP
+                ? "up"
+                : (snake->direction == RIGHT
+                       ? "right"
+                       : (snake->direction == DOWN ? "bottom" : "left")));
+    render_asset(asset_name, screen, tile->x, tile->y);
+    tile = tile->next;
+    while (tile != NULL) {
         render_tile(screen, tile);
         tile = tile->next;
-    } while (tile != NULL);
+    };
 }
 
 int collides_with_snake(Snake snake, int x, int y) {

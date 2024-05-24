@@ -27,7 +27,7 @@ int main_menu_screen(Screen screen, struct timespec *loop_delay,
         draw_string(screen, 100, 185, "Change speed using GREEN knob", BLACK);
         draw_string(screen, 100, 205, "Quit by pressing GREEN knob", BLACK);
 
-        draw_string(screen, 10, SCREEN_HEIGHT - 50, "Player 1", YELLOW);
+        draw_string(screen, 10, SCREEN_HEIGHT - 50, "Player 1", RED);
         draw_string(screen, 10, SCREEN_HEIGHT - 20,
                     pressed == RED_KNOB ? "Ready!" : "Ready? Hold RED knob",
                     BLACK);

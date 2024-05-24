@@ -1,7 +1,7 @@
 #include "game.h"
 
 int init_entities(Snake *snake1, Snake *snake2, Food *food) {
-    *snake1 = create_snake(YELLOW, 0, 0, DOWN);
+    *snake1 = create_snake(RED, 0, 0, DOWN);
     if (!*snake1) {
         fprintf(stderr, "[CRITICAL]: Failed to create snake 1\n");
         return 1;
@@ -37,7 +37,7 @@ void render_score_panel(Screen screen, int score1, int score2) {
         }
     }
     char score_label[50];
-    sprintf(score_label, "Yellow %d", score1);
+    sprintf(score_label, "Red %d", score1);
     draw_string(screen, 15, SCREEN_HEIGHT - PANEL_HEIGHT + 5, score_label,
                 BLACK);
 
@@ -45,13 +45,12 @@ void render_score_panel(Screen screen, int score1, int score2) {
     draw_string(screen, SCREEN_WIDTH - 100, SCREEN_HEIGHT - PANEL_HEIGHT + 5,
                 score_label, BLACK);
 
-    draw_string(
-        screen, CENTER_X, SCREEN_HEIGHT - PANEL_HEIGHT + 5,
-        score1 > score2 ? "YELLOW" : (score2 > score1 ? "BLUE" : "draw"),
-        BLACK);
+    draw_string(screen, CENTER_X, SCREEN_HEIGHT - PANEL_HEIGHT + 5,
+                score1 > score2 ? "RED" : (score2 > score1 ? "BLUE" : "draw"),
+                BLACK);
 }
 
-// winner is 1 = Yellow player, 2 = Blue player, 0 = draw, -1 = game is not over
+// winner is 1 = Red player, 2 = Blue player, 0 = draw, -1 = game is not over
 int game_screen(Screen screen, struct timespec *loop_delay,
                 MemBase elements_memory, MemBase screen_memory, int *winner,
                 int *snake1_score, int *snake2_score) {
