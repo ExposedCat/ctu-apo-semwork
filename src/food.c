@@ -20,8 +20,7 @@ void render_food(Screen screen, Food food) {
 }
 
 int collides_with_food(Food food, int x, int y) {
-    return x >= food->x && x <= food->x + TILE_SIZE && y >= food->y &&
-           y <= food->y + TILE_SIZE;
+    return x == food->x && y == food->y;
 }
 
 void destroy_food(Food food) { free(food); }

@@ -14,7 +14,7 @@
 #define SCREEN_WIDTH 480
 #define CENTER_X ((SCREEN_WIDTH - TILE_SIZE) / 2)
 #define SCREEN_HEIGHT 320
-#define PANEL_HEIGHT 40
+#define PANEL_HEIGHT 20
 #define PLAYGROUND_HEIGHT \
     (SCREEN_HEIGHT - PANEL_HEIGHT)  // NOTE: Ensure PLAYGROUND_HEIGHT is a
                                     // multiple of TILE_SIZE

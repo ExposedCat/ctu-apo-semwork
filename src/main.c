@@ -74,12 +74,26 @@ void draw_menu(Screen screen, MemBase screen_memory, int red_held,
     }
 }
 
-void render_panel(Screen screen) {
+void render_panel(Screen screen, int score1, int score2) {
     for (int x = 0; x < SCREEN_WIDTH; ++x) {
         for (int y = SCREEN_HEIGHT - PANEL_HEIGHT; y < SCREEN_HEIGHT; ++y) {
             draw_pixel(screen, x, y, WHITE);
         }
     }
+    char score1_label[50];
+    sprintf(score1_label, "Yellow %d", score1);
+    draw_string(screen, 15, SCREEN_HEIGHT - PANEL_HEIGHT + 5, score1_label,
+                BLACK);
+
+    char score2_label[50];
+    sprintf(score1_label, "Blue %d", score2);
+    draw_string(screen, SCREEN_WIDTH - 100, SCREEN_HEIGHT - PANEL_HEIGHT + 5,
+                score1_label, BLACK);
+
+    draw_string(
+        screen, CENTER_X, SCREEN_HEIGHT - PANEL_HEIGHT + 5,
+        score1 > score2 ? "YELLOW" : (score2 > score1 ? "BLUE" : "draw"),
+        BLACK);
 }
 
 int set_speed(struct timespec *loop_delay, MemBase elements_memory, int value) {
@@ -158,7 +172,7 @@ int main(int argc, char *argv[]) {
         render_snake(screen, snake2);
         render_food(screen, food);
 
-        render_panel(screen);
+        render_panel(screen, snake1->length, snake2->length);
 
         parlcd_write_cmd(screen_memory, 0x2c);
         for (int pixel = 0; pixel < SCREEN_WIDTH * SCREEN_HEIGHT; pixel++) {
