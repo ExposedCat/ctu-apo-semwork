@@ -19,6 +19,19 @@ void render_snake(Screen screen, Snake snake) {
     draw_scaled_pixel(screen, snake->x, snake->y, TILE_WIDTH, snake->color);
 }
 
+void rotate_snake(Snake snake, int rotation_change) {
+    if (abs(rotation_change) < 10) {
+        return;
+    }
+    if (rotation_change > 0 && rotation_change < 195 ||
+        rotation_change <= -195) {
+        snake->direction = (snake->direction - 1) % 4;
+    } else if (rotation_change < 0 && rotation_change > -195 ||
+               rotation_change >= 195) {
+        snake->direction = (snake->direction + 1) % 4;
+    }
+}
+
 void move_snake(Screen screen, Snake snake) {
     int change_x = snake->direction == LEFT    ? -1
                    : snake->direction == RIGHT ? 1

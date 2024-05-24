@@ -77,37 +77,39 @@ int main(int argc, char *argv[]) {
     struct timespec loop_delay;
     loop_delay.tv_sec = 0;
     loop_delay.tv_nsec = 250 * 1000 * 1000;
-    int xx = 0, yy = 0, zz = 0;
-    int oldxx = 0, oldzz = 0;
+
+    int previous_red_knob = 0;
+    int previous_blue_knob = 0;
+
+    uint8_t result[8];
+    for (unsigned i = 0; i < 7; i += 2) result[i] = 0;
+
     while (1) {
-        int r = *(volatile uint32_t *)(mem_base + SPILED_REG_KNOBS_8BIT_o);
-        if ((r & 0x7000000) != 0) {
+        int rgb_knobs_value =
+            *(volatile uint32_t *)(mem_base + SPILED_REG_KNOBS_8BIT_o);
+
+        int blue_knob = (rgb_knobs_value & 0x000000ff);
+        // int green_knob = (rgb_knobs_value & 0x0000ff00) >> 8;
+        int red_knob = (rgb_knobs_value & 0x00ff0000) >> 16;
+        int clicked = (rgb_knobs_value & 0xff000000) >>
+                      24;  // 4 == red, 2 == green, 1 == blue
+
+        if (clicked == 2) {
             break;
         }
-        xx = ((r & 0xff) * SCREEN_WIDTH) / 256;          // blue
-        yy = (((r >> 8) & 0xff) * SCREEN_HEIGHT) / 256;  // green
-        zz = (((r >> 16) & 0xff) * 160) / 256;           // red
 
-        int delta1 = zz - oldzz;
-        int delta2 = xx - oldxx;
-        // change_direction(&snake1, delta1);
-        // change_direction(&snake2, delta2);
+        int red_knob_change = red_knob - previous_red_knob;
+        int blue_knob_change = blue_knob - previous_blue_knob;
 
-        // if (snake1->length > 1) {
-        //     update_snake_segments(&snake1);
-        // }
-        // if (snake2->length > 1) {
-        //     update_snake_segments(&snake2);
-        // }
-
-        oldxx = xx;
-        oldzz = zz;
+        previous_blue_knob = blue_knob;
+        previous_red_knob = red_knob;
 
         for (pixel = 0; pixel < SCREEN_HEIGHT * SCREEN_WIDTH; pixel++) {
             screen[pixel] = 0u;
         }
 
-        printf("%d;%d;%d\n", xx, yy, zz);
+        rotate_snake(snake1, red_knob_change);
+        rotate_snake(snake2, blue_knob_change);
 
         // update_snake_position(&snake1);
         // update_snake_position(&snake2);
