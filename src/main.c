@@ -20,67 +20,145 @@
 #include "src/snake.h"
 #include "src/utils.h"
 
-Screen screen;
-font_descriptor_t *font;
+void reset_screen(Screen screen) {
+    for (int pixel = 0; pixel < SCREEN_HEIGHT * SCREEN_WIDTH; pixel++) {
+        screen[pixel] = 0u;
+    }
+}
+
+typedef enum KnobPressed {
+    RED_KNOB = 4,
+    GREEN_KNOB = 2,
+    BLUE_KNOB = 1
+} KnobPressed;
+
+void get_knobs_state(MemBase knobs_memory, int *red_knob, int *green_knob,
+                     int *blue_knob, int *clicked) {
+    int rgb_knobs_value =
+        *(volatile uint32_t *)(knobs_memory + SPILED_REG_KNOBS_8BIT_o);
+
+    if (blue_knob) {
+        *blue_knob = (rgb_knobs_value & 0x000000ff);
+    }
+    if (red_knob) {
+        *red_knob = (rgb_knobs_value & 0x00ff0000) >> 16;
+    }
+    if (green_knob) {
+        *green_knob = (rgb_knobs_value & 0x0000ff00) >> 8;
+    }
+    if (clicked) {
+        *clicked = (rgb_knobs_value & 0xff000000) >> 24;
+    }
+}
+
+int init_board(Screen *screen, MemBase *screen_memory, MemBase *knobs_memory) {
+    *screen = (Screen)malloc(SCREEN_HEIGHT * SCREEN_WIDTH * 2);
+
+    *screen_memory = map_phys_address(PARLCD_REG_BASE_PHYS, PARLCD_REG_SIZE, 0);
+    if (!*screen_memory) {
+        fprintf(stderr,
+                "Failed to initialize board: Screen memory allocation "
+                "failed\n");
+        return 1;
+    }
+
+    *knobs_memory = map_phys_address(SPILED_REG_BASE_PHYS, SPILED_REG_SIZE, 0);
+    if (!*knobs_memory) {
+        fprintf(stderr,
+                "Failed to initialize board: Knobs memory allocation "
+                "failed\n");
+        return 1;
+    }
+
+    parlcd_hx8357_init(*screen_memory);
+
+    parlcd_write_cmd(*screen_memory, 0x2c);
+    for (int pixel = 0; pixel < SCREEN_HEIGHT * SCREEN_WIDTH; ++pixel) {
+        (*screen)[pixel] = 0;
+        parlcd_write_data(*screen_memory, (*screen)[pixel]);
+    }
+
+    return 0;
+}
+
+int init_entities(Snake *snake1, Snake *snake2, Food *food) {
+    *snake1 = create_snake(YELLOW, 0, 0, DOWN);
+    if (!*snake1) {
+        fprintf(stderr, "[CRITICAL]: Failed to create snake 1\n");
+        return 1;
+    }
+    *snake2 = create_snake(BLUE, SCREEN_WIDTH - TILE_SIZE,
+                           SCREEN_HEIGHT - TILE_SIZE, UP);
+    if (!*snake2) {
+        destroy_snake(*snake1);
+        fprintf(stderr, "[CRITICAL]: Failed to create snake 2\n");
+        return 1;
+    }
+
+    *food = create_food(0, 0, WHITE, 1);
+    if (!*food) {
+        destroy_snake(*snake1);
+        destroy_snake(*snake2);
+        fprintf(stderr, "[CRITICAL]: Failed to create food\n");
+        return 1;
+    }
+    while (collides_with_food(*food, (*snake1)->head->x, (*snake1)->head->y) ||
+           collides_with_food(*food, (*snake2)->head->x, (*snake2)->head->y)) {
+        move_food(*food);
+    }
+
+    return 0;
+}
+
+void draw_menu(Screen screen, MemBase screen_memory, int red_held,
+               int blue_held) {
+    clear_screen(screen);
+
+    draw_string(screen, 100, 100, "Multiplayer Snake Game", BLACK);
+    draw_string(screen, 100, 120, "by Ievgeniia Rachkovska and Artem Prokop",
+                BLACK);
+
+    draw_string(screen, 10, SCREEN_HEIGHT - 50, "Player 1", BLACK);
+    draw_string(screen, 10, SCREEN_HEIGHT - 20,
+                red_held ? "Ready!" : "Ready? Hold RED knob", BLACK);
+    draw_string(screen, SCREEN_WIDTH - 90, SCREEN_HEIGHT - 50, "Player 2",
+                BLACK);
+    draw_string(screen, SCREEN_WIDTH - (blue_held ? 80 : 180),
+                SCREEN_HEIGHT - 20,
+                blue_held ? "Ready!" : "Ready? Hold BLUE knob", BLACK);
+
+    parlcd_write_cmd(screen_memory, 0x2c);
+    for (int pixel = 0; pixel < SCREEN_WIDTH * SCREEN_HEIGHT; ++pixel) {
+        parlcd_write_data(screen_memory, screen[pixel]);
+    }
+}
 
 int main(int argc, char *argv[]) {
-    unsigned char *parlcd_mem_base, *mem_base;
-    screen = (Screen)malloc(SCREEN_HEIGHT * SCREEN_WIDTH * 2);
-
     printf("[MAIN] Program started\n");
 
-    // some things so programe is working
-    // I don`t know what is that
-    parlcd_mem_base =
-        map_phys_address(PARLCD_REG_BASE_PHYS, PARLCD_REG_SIZE, 0);
-    if (parlcd_mem_base == NULL)
-        exit(1);
+    Screen screen = NULL;
+    MemBase screen_memory = NULL;
+    MemBase knobs_memory = NULL;
 
-    mem_base = map_phys_address(SPILED_REG_BASE_PHYS, SPILED_REG_SIZE, 0);
-    if (mem_base == NULL)
-        exit(1);
-
-    parlcd_hx8357_init(parlcd_mem_base);
-
-    parlcd_write_cmd(parlcd_mem_base, 0x2c);
-    int pixel = 0;
-    for (int i = 0; i < SCREEN_HEIGHT; i++) {
-        for (int j = 0; j < SCREEN_WIDTH; j++) {
-            screen[pixel] = 0;
-            parlcd_write_data(parlcd_mem_base, screen[pixel++]);
-        }
-    }
-    font = &font_winFreeSystem14x16;
-
-    // Init and lifecycle of the game
-    draw_menu(screen, font, parlcd_mem_base);
-    wait_for_start(mem_base);
-
-    Food food = create_food(CENTER_X, CENTER_Y, WHITE, 1);
-    if (!food) {
-        fprintf(stderr, "[MAIN][CRITICAL]: Failed to create food\n");
-        return 1;
+    int board_init_exit = init_board(&screen, &screen_memory, &knobs_memory);
+    if (board_init_exit) {
+        return board_init_exit;
     }
 
-    Snake snake1 = create_snake(1, YELLOW, 0, 0, DOWN);
-    if (!snake1) {
-        destroy_food(food);
-        fprintf(stderr, "[MAIN][CRITICAL]: Failed to create snake 1\n");
-        return 1;
+    int pressed = 0;
+    while (pressed != RED_KNOB + BLUE_KNOB) {
+        get_knobs_state(knobs_memory, NULL, NULL, NULL, &pressed);
+        draw_menu(screen, screen_memory, pressed == RED_KNOB,
+                  pressed == BLUE_KNOB);
     }
-    printf("[MAIN]: Snake 1 created\n");
-    Snake snake2 = create_snake(1, BLUE, SCREEN_WIDTH - TILE_SIZE,
-                                SCREEN_HEIGHT - TILE_SIZE, UP);
-    if (!snake2) {
-        destroy_food(food);
-        destroy_snake(snake1);
-        fprintf(stderr, "[MAIN][CRITICAL]: Failed to create snake 2\n");
-        return 1;
-    }
-    printf("[MAIN]: Snake 2 created\n");
 
-    //       Food_t food;
-    // initialize_food(&food, 200, 150, RED);
+    Snake snake1 = NULL;
+    Snake snake2 = NULL;
+    Food food = NULL;
+    int init_entities_exit = init_entities(&snake1, &snake2, &food);
+    if (init_entities_exit) {
+        return init_entities_exit;
+    }
 
     struct timespec loop_delay;
     loop_delay.tv_sec = 0;
@@ -90,16 +168,11 @@ int main(int argc, char *argv[]) {
     int previous_blue_knob = 0;
 
     while (1) {
-        int rgb_knobs_value =
-            *(volatile uint32_t *)(mem_base + SPILED_REG_KNOBS_8BIT_o);
+        int red_knob = 0;
+        int blue_knob = 0;
+        get_knobs_state(knobs_memory, &red_knob, NULL, &blue_knob, &pressed);
 
-        int blue_knob = (rgb_knobs_value & 0x000000ff);
-        // int green_knob = (rgb_knobs_value & 0x0000ff00) >> 8;
-        int red_knob = (rgb_knobs_value & 0x00ff0000) >> 16;
-        int clicked = (rgb_knobs_value & 0xff000000) >>
-                      24;  // 4 == red, 2 == green, 1 == blue
-
-        if (clicked == 2) {
+        if (pressed == GREEN_KNOB) {
             break;
         }
 
@@ -109,55 +182,35 @@ int main(int argc, char *argv[]) {
         previous_blue_knob = blue_knob;
         previous_red_knob = red_knob;
 
-        for (pixel = 0; pixel < SCREEN_HEIGHT * SCREEN_WIDTH; pixel++) {
-            screen[pixel] = 0u;
-        }
+        reset_screen(screen);
 
         rotate_snake(snake1, red_knob_change);
         rotate_snake(snake2, blue_knob_change);
 
-        // update_snake_position(&snake1);
-        // update_snake_position(&snake2);
         move_snake(screen, snake1);
         move_snake(screen, snake2);
 
-        printf("[MAIN] Checking snake 1..\n");
-        ensure_snake_collisions(snake1, snake2, food);
-        printf("[MAIN] Checking snake 2..\n");
-        ensure_snake_collisions(snake2, snake1, food);
+        int snake_dead = ensure_snake_collisions(snake1, snake2, food);
+        snake_dead = ensure_snake_collisions(snake2, snake1, food);
 
-        render_food(screen, food);
         render_snake(screen, snake1);
         render_snake(screen, snake2);
-        // render_snake(screen, snake3);
-        // draw_snake(&snake1, 0xFF00);
-        // draw_snake(&snake2, 0x001F);
-        // draw_food(&food, 0x07E0);  // Green food
+        render_food(screen, food);
 
-        // draw_score(snake1.snake_size, 10, 10, 0xFFFF);  // White color
-        // printf("snake1 score %d\n", snake1.snake_size);
-
-        // if (check_collision(&snake1, &food)) {
-        //     printf("eat\n");
-        //     grow_snake(&snake1);
-        //     relocate_food(&food);
-        // }
-
-        parlcd_write_cmd(parlcd_mem_base, 0x2c);
+        parlcd_write_cmd(screen_memory, 0x2c);
         for (int pixel = 0; pixel < SCREEN_WIDTH * SCREEN_HEIGHT; pixel++) {
-            parlcd_write_data(parlcd_mem_base, screen[pixel]);
+            parlcd_write_data(screen_memory, screen[pixel]);
         }
 
         clock_nanosleep(CLOCK_MONOTONIC, 0, &loop_delay, NULL);
     }
 
-    parlcd_write_cmd(parlcd_mem_base, 0x2c);
+    parlcd_write_cmd(screen_memory, 0x2c);
     for (int pixel = 0; pixel < SCREEN_WIDTH * SCREEN_HEIGHT; pixel++) {
-        parlcd_write_data(parlcd_mem_base, 0);
+        parlcd_write_data(screen_memory, 0);
     }
 
-    // led_line(mem_base, val_line);
-
+    destroy_food(food);
     destroy_snake(snake1);
     destroy_snake(snake2);
 

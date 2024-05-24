@@ -20,15 +20,16 @@
 #define Font font_descriptor_t *
 
 void draw_pixel(Screen screen, int x, int y, Color color);
+
 void draw_scaled_pixel(Screen screen, int x, int y, int scale,
                        unsigned short color);
+
 void clear_screen(Screen screen);
-void draw_character(Screen screen, int x, int y, char character, Font font,
-                    Color color);
-void draw_string(Screen screen, Font font, int x, int y, const char *str,
-                 Color color);
-void draw_menu(Screen screen, Font font, unsigned char *parlcd_mem_base);
+
+void draw_string(Screen screen, int x, int y, const char *str, Color color);
+
 void wait_for_start(unsigned char *mem_base);
+
 void choose_random_tile(int *x, int *y);
 
 #endif

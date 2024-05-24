@@ -2,28 +2,32 @@
 
 #include "food.h"
 
-Snake create_snake(int length, Color color, int x, int y, Direction direction) {
+Snake create_snake(Color color, int x, int y, Direction direction) {
     Snake snake = (Snake)malloc(sizeof(Snake_t));
     if (snake == NULL) {
         return NULL;
     }
 
-    Tile head = (Tile)malloc(sizeof(Tile_t));
+    Tile head = create_tile(x, y, TILE_SIZE, color);
     if (head == NULL) {
         free(snake);
         return NULL;
     }
 
-    snake->length = length;
+    snake->length = 1;
     snake->color = color;
     snake->head = head;
     snake->direction = direction;
+    snake->got_bigger = 0;
     return snake;
 }
 
 void render_snake(Screen screen, Snake snake) {
-    draw_scaled_pixel(screen, snake->head->x, snake->head->y, TILE_SIZE,
-                      snake->color);
+    Tile tile = snake->head;
+    do {
+        render_tile(screen, tile);
+        tile = tile->next;
+    } while (tile != NULL);
 }
 
 int collides_with_snake(Snake snake, int x, int y) {
@@ -42,16 +46,22 @@ int collides_with_snake(Snake snake, int x, int y) {
     return 0;
 }
 
-void ensure_snake_collisions(Snake snake, Snake another_snake, Food food) {
+int ensure_snake_collisions(Snake snake, Snake another_snake, Food food) {
     if (collides_with_food(food, snake->head->x, snake->head->y)) {
         snake->length += 1;
-        move_food(food);
-        printf("[SNAKE] Ate food");
+        snake->got_bigger = 1;
+        while (collides_with_food(food, snake->head->x, snake->head->y) ||
+               collides_with_food(food, another_snake->head->x,
+                                  another_snake->head->y)) {
+            move_food(food);
+        }
     }
 
     if (collides_with_snake(another_snake, snake->head->x, snake->head->y)) {
-        printf("[SNAKE] Dead");
+        return 1;
     }
+
+    return 0;
 }
 
 void rotate_snake(Snake snake, int rotation_change) {
@@ -74,21 +84,36 @@ void move_snake(Screen screen, Snake snake) {
     int change_y = snake->direction == UP     ? -1
                    : snake->direction == DOWN ? 1
                                               : 0;
-    snake->head->x += change_x * TILE_SIZE;
-    if (snake->head->x < 0) {
-        snake->head->x += SCREEN_WIDTH;
-    }
-    if (snake->head->x > SCREEN_WIDTH) {
-        snake->head->x -= SCREEN_WIDTH;
-    }
 
-    snake->head->y += change_y * TILE_SIZE;
-    if (snake->head->y < 0) {
-        snake->head->y += SCREEN_HEIGHT;
+    int new_x = snake->head->x + change_x * TILE_SIZE;
+    int new_y = snake->head->y + change_y * TILE_SIZE;
+
+    new_x +=
+        (new_x < 0 ? SCREEN_WIDTH : (new_x > SCREEN_WIDTH ? -SCREEN_WIDTH : 0));
+
+    new_y += (new_y < 0 ? SCREEN_HEIGHT
+                        : (new_y > SCREEN_HEIGHT ? -SCREEN_HEIGHT : 0));
+
+    if (!snake->got_bigger) {
+        Tile parent = NULL;
+        Tile last_tile = snake->head;
+        while (last_tile->next != NULL) {
+            parent = last_tile;
+            last_tile = last_tile->next;
+        }
+        if (parent != NULL) {
+            parent->next = NULL;
+        }
+        destroy_tile(last_tile);
+        if (snake->length == 1) {
+            snake->head = NULL;
+        }
     }
-    if (snake->head->y > SCREEN_HEIGHT) {
-        snake->head->y -= SCREEN_HEIGHT;
-    }
+    snake->got_bigger = 0;
+
+    Tile new_head = create_tile(new_x, new_y, TILE_SIZE, snake->color);
+    new_head->next = snake->head;
+    snake->head = new_head;
 }
 
 void destroy_snake(Snake snake) { free(snake); }

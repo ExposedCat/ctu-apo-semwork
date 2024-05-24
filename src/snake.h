@@ -17,9 +17,10 @@ typedef struct Snake_t {
     Color color;
     Tile head;
     Direction direction;
+    int got_bigger;
 } Snake_t;
 
-Snake create_snake(int length, Color color, int x, int y, Direction direction);
+Snake create_snake(Color color, int x, int y, Direction direction);
 
 void render_snake(Screen screen, Snake snake);
 
@@ -29,6 +30,7 @@ void rotate_snake(Snake snake, int rotation_change);
 
 void destroy_snake(Snake snake);
 
-void ensure_snake_collisions(Snake snake, Snake another_snake, Food food);
+// Returns true if snake is dead
+int ensure_snake_collisions(Snake snake, Snake another_snake, Food food);
 
 #endif

@@ -10,11 +10,12 @@
 typedef struct Tile_t {
     int x;
     int y;
+    int size;
     Color color;
     struct Tile_t* next;
 } Tile_t;
 
-Tile create_tile(int x, int y, Color color);
+Tile create_tile(int x, int y, int size, Color color);
 
 void render_tile(Screen screen, Tile tile);
 
