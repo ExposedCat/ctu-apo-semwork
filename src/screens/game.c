@@ -7,7 +7,7 @@ int init_entities(Snake *snake1, Snake *snake2, Food *food) {
         return 1;
     }
     *snake2 = create_snake(BLUE, SCREEN_WIDTH - TILE_SIZE,
-                           SCREEN_HEIGHT - TILE_SIZE, UP);
+                           PLAYGROUND_HEIGHT - TILE_SIZE, UP);
     if (!*snake2) {
         destroy_snake(*snake1);
         fprintf(stderr, "[CRITICAL]: Failed to create snake 2\n");
@@ -67,6 +67,8 @@ int game_screen(Screen screen, struct timespec *loop_delay,
 
     int previous_red_knob = 0;
     int previous_blue_knob = 0;
+    get_knobs_state(elements_memory, &previous_red_knob, NULL,
+                    &previous_blue_knob, NULL);
 
     while (1) {
         int pressed = 0;

@@ -56,7 +56,8 @@ int main(int argc, char *argv[]) {
         }
 
         game_over_screen(screen, &loop_delay, elements_memory, screen_memory,
-                         winner, snake1_score, snake2_score);
+                         winner, snake1_score > 0 ? snake1_score : 0,
+                         snake2_score > 0 ? snake2_score : 0);
     }
 
     free(screen);

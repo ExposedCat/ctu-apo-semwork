@@ -27,4 +27,8 @@ void game_over_screen(Screen screen, struct timespec *loop_delay,
             parlcd_write_data(screen_memory, screen[pixel]);
         }
     }
+    while (pressed == GREEN_KNOB) {
+        get_knobs_state(elements_memory, NULL, NULL, NULL, &pressed);
+        // Waiting to release the knob
+    }
 }
