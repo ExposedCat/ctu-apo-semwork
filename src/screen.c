@@ -87,3 +87,16 @@ void wait_for_start(unsigned char *mem_base) {
         }
     }
 }
+
+void choose_random_tile(int *x, int *y) {
+    srand(time(NULL));
+
+    int num_tiles_x = SCREEN_WIDTH / TILE_SIZE;
+    int num_tiles_y = SCREEN_HEIGHT / TILE_SIZE;
+
+    int tile_index_x = rand() % num_tiles_x;
+    int tile_index_y = rand() % num_tiles_y;
+
+    *x = tile_index_x * TILE_SIZE;
+    *y = tile_index_y * TILE_SIZE;
+}

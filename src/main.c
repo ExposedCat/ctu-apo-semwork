@@ -15,7 +15,7 @@
 #include <unistd.h>
 
 #include "font_types.h"
-#include "mzapo_parlcd.h"
+#include "src/food.h"
 #include "src/screen.h"
 #include "src/snake.h"
 #include "src/utils.h"
@@ -26,7 +26,6 @@ font_descriptor_t *font;
 int main(int argc, char *argv[]) {
     unsigned char *parlcd_mem_base, *mem_base;
     screen = (Screen)malloc(SCREEN_HEIGHT * SCREEN_WIDTH * 2);
-    uint32_t val_line = 3;
 
     printf("[MAIN] Program started\n");
 
@@ -57,15 +56,24 @@ int main(int argc, char *argv[]) {
     draw_menu(screen, font, parlcd_mem_base);
     wait_for_start(mem_base);
 
+    Food food = create_food(CENTER_X, CENTER_Y, WHITE, 1);
+    if (!food) {
+        fprintf(stderr, "[MAIN][CRITICAL]: Failed to create food\n");
+        return 1;
+    }
+
     Snake snake1 = create_snake(1, YELLOW, 0, 0, DOWN);
     if (!snake1) {
+        destroy_food(food);
         fprintf(stderr, "[MAIN][CRITICAL]: Failed to create snake 1\n");
         return 1;
     }
     printf("[MAIN]: Snake 1 created\n");
-    Snake snake2 = create_snake(1, BLUE, SCREEN_WIDTH - TILE_WIDTH,
-                                SCREEN_HEIGHT - TILE_WIDTH, UP);
+    Snake snake2 = create_snake(1, BLUE, SCREEN_WIDTH - TILE_SIZE,
+                                SCREEN_HEIGHT - TILE_SIZE, UP);
     if (!snake2) {
+        destroy_food(food);
+        destroy_snake(snake1);
         fprintf(stderr, "[MAIN][CRITICAL]: Failed to create snake 2\n");
         return 1;
     }
@@ -80,9 +88,6 @@ int main(int argc, char *argv[]) {
 
     int previous_red_knob = 0;
     int previous_blue_knob = 0;
-
-    uint8_t result[8];
-    for (unsigned i = 0; i < 7; i += 2) result[i] = 0;
 
     while (1) {
         int rgb_knobs_value =
@@ -116,6 +121,12 @@ int main(int argc, char *argv[]) {
         move_snake(screen, snake1);
         move_snake(screen, snake2);
 
+        printf("[MAIN] Checking snake 1..\n");
+        ensure_snake_collisions(snake1, snake2, food);
+        printf("[MAIN] Checking snake 2..\n");
+        ensure_snake_collisions(snake2, snake1, food);
+
+        render_food(screen, food);
         render_snake(screen, snake1);
         render_snake(screen, snake2);
         // render_snake(screen, snake3);
@@ -147,8 +158,8 @@ int main(int argc, char *argv[]) {
 
     // led_line(mem_base, val_line);
 
-    free(snake1);
-    free(snake2);
+    destroy_snake(snake1);
+    destroy_snake(snake2);
 
     printf("[MAIN] Program finished\n");
 
