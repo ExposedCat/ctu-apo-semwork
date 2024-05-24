@@ -30,6 +30,8 @@ void rotate_snake(Snake snake, int rotation_change);
 
 void destroy_snake(Snake snake);
 
+int is_food_on_snake(Snake snake, Food food);
+
 // Returns true if snake is dead
 int ensure_snake_collisions(Snake snake, Snake another_snake, Food food);
 

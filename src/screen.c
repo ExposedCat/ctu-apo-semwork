@@ -1,7 +1,5 @@
 #include "screen.h"
 
-#include <stdio.h>
-
 void draw_pixel(Screen screen, int x, int y, Color color) {
     if (x >= 0 && x < SCREEN_WIDTH && y >= 0 && y < SCREEN_HEIGHT) {
         screen[x + SCREEN_WIDTH * y] = color;
@@ -59,8 +57,8 @@ void draw_string(Screen screen, int x, int y, const char *text, Color color) {
 void choose_random_tile(int *x, int *y) {
     srand(time(NULL));
 
-    int num_tiles_x = SCREEN_WIDTH / TILE_SIZE;
-    int num_tiles_y = SCREEN_HEIGHT / TILE_SIZE;
+    int num_tiles_x = (SCREEN_WIDTH / TILE_SIZE) - 1;
+    int num_tiles_y = (SCREEN_HEIGHT / TILE_SIZE) - 1;
 
     int tile_index_x = rand() % num_tiles_x;
     int tile_index_y = rand() % num_tiles_y;

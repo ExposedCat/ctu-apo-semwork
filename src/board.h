@@ -4,7 +4,12 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#include "mzapo_parlcd.h"
+#include "mzapo_phys.h"
+#include "mzapo_regs.h"
 #include "screen.h"
+
+#define MemBase unsigned char *
 
 typedef enum KnobPressed {
     RED_KNOB = 4,

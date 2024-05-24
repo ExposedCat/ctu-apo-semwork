@@ -24,6 +24,7 @@ int init_board(Screen *screen, MemBase *screen_memory, MemBase *knobs_memory) {
 
     *screen_memory = map_phys_address(PARLCD_REG_BASE_PHYS, PARLCD_REG_SIZE, 0);
     if (!*screen_memory) {
+        free(screen);
         fprintf(stderr,
                 "Failed to initialize board: Screen memory allocation "
                 "failed\n");
@@ -32,6 +33,7 @@ int init_board(Screen *screen, MemBase *screen_memory, MemBase *knobs_memory) {
 
     *knobs_memory = map_phys_address(SPILED_REG_BASE_PHYS, SPILED_REG_SIZE, 0);
     if (!*knobs_memory) {
+        free(screen);
         fprintf(stderr,
                 "Failed to initialize board: Knobs memory allocation "
                 "failed\n");

@@ -1,12 +1,14 @@
 #ifndef SCREEN_H
 #define SCREEN_H
 
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
 #include "font_types.h"
 #include "mzapo_regs.h"
-#include "utils.h"
+#include "utils/colors.h"
 
 #define TILE_SIZE 20
 #define FOOD_SIZE 10
@@ -31,8 +33,6 @@ void draw_scaled_pixel(Screen screen, int x, int y, int scale,
 void clear_screen(Screen screen);
 
 void draw_string(Screen screen, int x, int y, const char *str, Color color);
-
-void wait_for_start(unsigned char *mem_base);
 
 void choose_random_tile(int *x, int *y);
 

@@ -5,6 +5,15 @@
     "stdlib.h": "c",
     "utils.h": "c",
     "screen.h": "c",
-    "snake.h": "c"
+    "snake.h": "c",
+    "screens.h": "c",
+    "board.h": "c",
+    "game.h": "c",
+    "game-over.h": "c",
+    "string.h": "c",
+    "mzapo_regs.h": "c",
+    "font_types.h": "c",
+    "time.h": "c",
+    "main-menu.h": "c"
   }
 }

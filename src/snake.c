@@ -33,26 +33,24 @@ void render_snake(Screen screen, Snake snake) {
 int collides_with_snake(Snake snake, int x, int y) {
     Tile tile = snake->head;
     do {
-        if (x >= tile->x && x <= tile->x + TILE_SIZE && y >= tile->y &&
-            y <= tile->y + TILE_SIZE) {
+        if (tile->x == x && tile->y == y) {
             return 1;
         }
-        if (tile->next != NULL) {
-            tile = tile->next;
-        } else {
-            break;
-        }
-    } while (1);
+        tile = tile->next;
+    } while (tile != NULL);
     return 0;
+}
+
+int is_food_on_snake(Snake snake, Food food) {
+    return collides_with_snake(snake, food->x, food->y);
 }
 
 int ensure_snake_collisions(Snake snake, Snake another_snake, Food food) {
     if (collides_with_food(food, snake->head->x, snake->head->y)) {
         snake->length += 1;
         snake->got_bigger = 1;
-        while (collides_with_food(food, snake->head->x, snake->head->y) ||
-               collides_with_food(food, another_snake->head->x,
-                                  another_snake->head->y)) {
+        while (is_food_on_snake(snake, food) ||
+               is_food_on_snake(another_snake, food)) {
             move_food(food);
         }
     }
