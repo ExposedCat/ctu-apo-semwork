@@ -68,3 +68,9 @@ void choose_random_tile(int *x, int *y) {
     *x = tile_index_x * TILE_SIZE;
     *y = tile_index_y * TILE_SIZE;
 }
+
+void reset_screen(Screen screen) {
+    for (int pixel = 0; pixel < SCREEN_HEIGHT * SCREEN_WIDTH; pixel++) {
+        screen[pixel] = 0u;
+    }
+}

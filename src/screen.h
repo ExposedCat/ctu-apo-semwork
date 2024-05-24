@@ -32,4 +32,6 @@ void wait_for_start(unsigned char *mem_base);
 
 void choose_random_tile(int *x, int *y);
 
+void reset_screen(Screen screen);
+
 #endif
