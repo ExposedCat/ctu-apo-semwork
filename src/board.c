@@ -48,3 +48,8 @@ int init_board(Screen *screen, MemBase *screen_memory, MemBase *knobs_memory) {
 
     return 0;
 }
+
+void set_led_line(MemBase board_memory, int units) {
+    *(volatile uint32_t *)(board_memory + SPILED_REG_LED_LINE_o) =
+        0xFFFFFFFF << (32 - units);
+}

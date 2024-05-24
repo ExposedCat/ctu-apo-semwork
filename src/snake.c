@@ -88,11 +88,16 @@ void move_snake(Screen screen, Snake snake) {
     int new_x = snake->head->x + change_x * TILE_SIZE;
     int new_y = snake->head->y + change_y * TILE_SIZE;
 
-    new_x +=
-        (new_x < 0 ? SCREEN_WIDTH : (new_x > SCREEN_WIDTH ? -SCREEN_WIDTH : 0));
+    new_x += (new_x < 0 ? SCREEN_WIDTH
+                        : (new_x >= SCREEN_WIDTH ? -SCREEN_WIDTH : 0));
 
-    new_y += (new_y < 0 ? SCREEN_HEIGHT
-                        : (new_y > SCREEN_HEIGHT ? -SCREEN_HEIGHT : 0));
+    new_y +=
+        (new_y < 0 ? PLAYGROUND_HEIGHT
+                   : (new_y >= PLAYGROUND_HEIGHT ? -PLAYGROUND_HEIGHT : 0));
+
+    if (change_y) {
+        printf("Moving snake to %d\n", new_y);
+    }
 
     if (!snake->got_bigger) {
         Tile parent = NULL;

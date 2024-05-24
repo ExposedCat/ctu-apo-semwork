@@ -12,9 +12,13 @@
 #define FOOD_SIZE 10
 
 #define SCREEN_WIDTH 480
-#define CENTER_X (SCREEN_WIDTH - TILE_SIZE) / 2
+#define CENTER_X ((SCREEN_WIDTH - TILE_SIZE) / 2)
 #define SCREEN_HEIGHT 320
-#define CENTER_Y (SCREEN_HEIGHT - TILE_SIZE) / 2
+#define PANEL_HEIGHT 40
+#define PLAYGROUND_HEIGHT \
+    (SCREEN_HEIGHT - PANEL_HEIGHT)  // NOTE: Ensure PLAYGROUND_HEIGHT is a
+                                    // multiple of TILE_SIZE
+#define CENTER_Y ((SCREEN_HEIGHT - TILE_SIZE) / 2)
 
 #define Screen unsigned short *
 #define Font font_descriptor_t *

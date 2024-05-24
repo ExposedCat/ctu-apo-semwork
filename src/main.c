@@ -57,12 +57,13 @@ void draw_menu(Screen screen, MemBase screen_memory, int red_held,
     draw_string(screen, 100, 100, "Multiplayer Snake Game", BLACK);
     draw_string(screen, 100, 120, "by Ievgeniia Rachkovska and Artem Prokop",
                 BLACK);
+    draw_string(screen, 100, 200, "Change speed using GREEN knob", BLACK);
 
-    draw_string(screen, 10, SCREEN_HEIGHT - 50, "Player 1", BLACK);
+    draw_string(screen, 10, SCREEN_HEIGHT - 50, "Player 1", YELLOW);
     draw_string(screen, 10, SCREEN_HEIGHT - 20,
                 red_held ? "Ready!" : "Ready? Hold RED knob", BLACK);
     draw_string(screen, SCREEN_WIDTH - 90, SCREEN_HEIGHT - 50, "Player 2",
-                BLACK);
+                BLUE);
     draw_string(screen, SCREEN_WIDTH - (blue_held ? 80 : 180),
                 SCREEN_HEIGHT - 20,
                 blue_held ? "Ready!" : "Ready? Hold BLUE knob", BLACK);
@@ -73,21 +74,41 @@ void draw_menu(Screen screen, MemBase screen_memory, int red_held,
     }
 }
 
+void render_panel(Screen screen) {
+    for (int x = 0; x < SCREEN_WIDTH; ++x) {
+        for (int y = SCREEN_HEIGHT - PANEL_HEIGHT; y < SCREEN_HEIGHT; ++y) {
+            draw_pixel(screen, x, y, WHITE);
+        }
+    }
+}
+
+int set_speed(struct timespec *loop_delay, MemBase elements_memory, int value) {
+    loop_delay->tv_nsec = (256 - value) * 1000 * 1000;
+    set_led_line(elements_memory, value / 8);
+}
+
 int main(int argc, char *argv[]) {
     printf("[MAIN] Program started\n");
 
     Screen screen = NULL;
     MemBase screen_memory = NULL;
-    MemBase knobs_memory = NULL;
+    MemBase elements_memory = NULL;
 
-    int board_init_exit = init_board(&screen, &screen_memory, &knobs_memory);
+    int board_init_exit = init_board(&screen, &screen_memory, &elements_memory);
     if (board_init_exit) {
         return board_init_exit;
     }
 
+    struct timespec loop_delay;
+    loop_delay.tv_sec = 0;
+
     int pressed = 0;
     while (pressed != RED_KNOB + BLUE_KNOB) {
-        get_knobs_state(knobs_memory, NULL, NULL, NULL, &pressed);
+        int green_knob = 0;
+        get_knobs_state(elements_memory, NULL, &green_knob, NULL, &pressed);
+
+        set_speed(&loop_delay, elements_memory, green_knob);
+
         draw_menu(screen, screen_memory, pressed == RED_KNOB,
                   pressed == BLUE_KNOB);
     }
@@ -100,21 +121,21 @@ int main(int argc, char *argv[]) {
         return init_entities_exit;
     }
 
-    struct timespec loop_delay;
-    loop_delay.tv_sec = 0;
-    loop_delay.tv_nsec = 250 * 1000 * 1000;
-
     int previous_red_knob = 0;
     int previous_blue_knob = 0;
 
     while (1) {
         int red_knob = 0;
         int blue_knob = 0;
-        get_knobs_state(knobs_memory, &red_knob, NULL, &blue_knob, &pressed);
+        int green_knob = 0;
+        get_knobs_state(elements_memory, &red_knob, &green_knob, &blue_knob,
+                        &pressed);
 
         if (pressed == GREEN_KNOB) {
             break;
         }
+
+        set_speed(&loop_delay, elements_memory, green_knob);
 
         int red_knob_change = red_knob - previous_red_knob;
         int blue_knob_change = blue_knob - previous_blue_knob;
@@ -137,6 +158,8 @@ int main(int argc, char *argv[]) {
         render_snake(screen, snake2);
         render_food(screen, food);
 
+        render_panel(screen);
+
         parlcd_write_cmd(screen_memory, 0x2c);
         for (int pixel = 0; pixel < SCREEN_WIDTH * SCREEN_HEIGHT; pixel++) {
             parlcd_write_data(screen_memory, screen[pixel]);
@@ -144,6 +167,8 @@ int main(int argc, char *argv[]) {
 
         clock_nanosleep(CLOCK_MONOTONIC, 0, &loop_delay, NULL);
     }
+
+    set_led_line(elements_memory, 0);
 
     parlcd_write_cmd(screen_memory, 0x2c);
     for (int pixel = 0; pixel < SCREEN_WIDTH * SCREEN_HEIGHT; pixel++) {
