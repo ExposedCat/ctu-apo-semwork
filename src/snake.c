@@ -26,7 +26,7 @@ Snake create_snake(Color color, int x, int y, Direction direction) {
 void render_snake(Screen screen, Snake snake) {
     Tile tile = snake->head;
     char asset_name[100];
-    sprintf(asset_name, "snake-%s-%s.ppm",
+    sprintf(asset_name, "/tmp/rachkiev/snake-%s-%s.ppm",
             snake->color == RED ? "red" : "blue",
             snake->direction == UP
                 ? "up"
@@ -74,14 +74,9 @@ int ensure_snake_collisions(Snake snake, Snake another_snake, Food food) {
 }
 
 void rotate_snake(Snake snake, int rotation_change) {
-    if (abs(rotation_change) < 10) {
-        return;
-    }
-    if ((rotation_change > 0 && rotation_change < 195) ||
-        rotation_change <= -195) {
+    if (rotation_change > 0) {
         snake->direction = (snake->direction - 1) % 4;
-    } else if ((rotation_change < 0 && rotation_change > -195) ||
-               rotation_change >= 195) {
+    } else if (rotation_change < 0) {
         snake->direction = (snake->direction + 1) % 4;
     }
 }

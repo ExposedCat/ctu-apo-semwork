@@ -86,11 +86,27 @@ int game_screen(Screen screen, struct timespec *loop_delay,
 
         set_speed(loop_delay, elements_memory, green_knob);
 
-        int red_knob_change = red_knob - previous_red_knob;
-        int blue_knob_change = blue_knob - previous_blue_knob;
+        int8_t red_knob_diff = red_knob - previous_red_knob;
+        int8_t blue_knob_diff = blue_knob - previous_blue_knob;
 
-        previous_blue_knob = blue_knob;
-        previous_red_knob = red_knob;
+        int red_knob_change = 0;
+        int blue_knob_change = 0;
+
+        if (red_knob_diff > 3) {
+            red_knob_change = 1;
+            previous_red_knob += 4;
+        } else if (red_knob_diff < -3) {
+            red_knob_change = -1;
+            previous_red_knob -= 4;
+        }
+
+        if (blue_knob_diff > 3) {
+            blue_knob_change = 1;
+            previous_blue_knob += 4;
+        } else if (blue_knob_diff < -3) {
+            blue_knob_change = -1;
+            previous_blue_knob -= 4;
+        }
 
         reset_screen(screen);
 
