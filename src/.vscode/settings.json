@@ -1,0 +1,7 @@
+{
+  "files.associations": {
+    "*.ejs": "html",
+    "*.isml": "html",
+    "image.h": "c"
+  }
+}

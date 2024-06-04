@@ -12,6 +12,7 @@ Tile create_tile(int x, int y, int size, Color color) {
     tile->y = y;
     tile->color = color;
     tile->size = size;
+    tile->next = NULL;
     return tile;
 }
 

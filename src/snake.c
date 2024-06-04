@@ -26,7 +26,7 @@ Snake create_snake(Color color, int x, int y, Direction direction) {
 void render_snake(Screen screen, Snake snake) {
     Tile tile = snake->head;
     char asset_name[100];
-    sprintf(asset_name, "/tmp/exposedcat/snake-%s-%s.ppm",
+    sprintf(asset_name, "snake-%s-%s.ppm",
             snake->color == RED ? "red" : "blue",
             snake->direction == UP
                 ? "up"

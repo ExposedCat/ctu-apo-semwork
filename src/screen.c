@@ -16,7 +16,7 @@ void draw_scaled_pixel(Screen screen, int x, int y, int scale,
 }
 
 void clear_screen(Screen screen) {
-    for (int pixel = 0; pixel < 320 * 480; ++pixel) {
+    for (int pixel = 0; pixel < SCREEN_WIDTH * SCREEN_HEIGHT; ++pixel) {
         screen[pixel] = 0xFFFF;
     }
 }
